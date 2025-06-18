@@ -313,27 +313,59 @@ class TEIProcessor:
         Parse coordinate string from GROBID TEI format.
         
         Format: "page,x,y,width,height" or multiple boxes separated by semicolons.
-        Returns the first bounding box.
+        Combines all bounding boxes into a single encompassing rectangle.
         """
         if not coords_str:
             return None
         
-        # Take first bounding box if multiple exist (separated by semicolons)
-        first_box = coords_str.split(';')[0]
+        # Split by semicolons to get all bounding boxes
+        boxes = coords_str.split(';')
+        valid_boxes = []
+        page = None
         
-        try:
-            parts = first_box.split(',')
-            if len(parts) >= 5:
-                page = int(parts[0])
-                x = float(parts[1])
-                y = float(parts[2])
-                width = float(parts[3])
-                height = float(parts[4])
-                return (page, x, y, width, height)
-        except (ValueError, IndexError):
-            pass
+        for box_str in boxes:
+            try:
+                parts = box_str.split(',')
+                if len(parts) >= 5:
+                    box_page = int(parts[0])
+                    box_x = float(parts[1])
+                    box_y = float(parts[2])
+                    box_width = float(parts[3])
+                    box_height = float(parts[4])
+                    
+                    # All boxes should be on the same page
+                    if page is None:
+                        page = box_page
+                    elif page != box_page:
+                        continue  # Skip boxes on different pages
+                    
+                    # Calculate bounding box coordinates (x1, y1, x2, y2)
+                    x1 = box_x
+                    y1 = box_y
+                    x2 = box_x + box_width
+                    y2 = box_y + box_height
+                    
+                    valid_boxes.append((x1, y1, x2, y2))
+                    
+            except (ValueError, IndexError):
+                continue
         
-        return None
+        if not valid_boxes or page is None:
+            return None
+        
+        # Find the encompassing bounding box
+        min_x = min(box[0] for box in valid_boxes)
+        min_y = min(box[1] for box in valid_boxes)
+        max_x = max(box[2] for box in valid_boxes)
+        max_y = max(box[3] for box in valid_boxes)
+        
+        # Convert back to (x, y, width, height) format
+        x = min_x
+        y = min_y
+        width = max_x - min_x
+        height = max_y - min_y
+        
+        return (page, x, y, width, height)
     
     def _get_element_text(self, element: ET.Element) -> str:
         """Extract all text content from an element, including nested elements."""
