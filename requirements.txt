@@ -1,0 +1,10 @@
+# GROBID Python Client and dependencies
+grobid-client-python>=0.0.11
+requests>=2.25.0
+
+# TEI XML processing dependencies
+PyMuPDF>=1.23.0  # For PDF cropping
+lxml>=4.9.0      # For better XML processing (optional)
+
+# Testing dependencies
+pytest>=6.0.0
