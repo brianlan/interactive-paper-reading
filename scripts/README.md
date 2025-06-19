@@ -1,37 +1,55 @@
-# Academic Paper Processing Scripts
+# Academic Paper Processing CLI Scripts
 
-This directory contains scripts for processing academic papers with GROBID, extracting structured content, and analyzing papers with LLM.
+This directory contains **command-line interface (CLI) scripts** for processing academic papers. All core logic has been moved to the `interactive_paper_reading` package, making these scripts lightweight CLI wrappers.
 
-## 🧰 Core Components
+## 🏗️ Architecture
 
-### 1. GROBID Processing (`grobid_processor.py`)
-- Converts PDF papers to structured TEI XML using GROBID service
-- Handles batch processing and error recovery
-- Configurable timeout and retry logic
+### Package Structure
+- **`interactive_paper_reading/`** - Core reusable library with all business logic
+- **`scripts/`** - CLI scripts using argparse for user interaction
 
-### 2. TEI Content Extraction (`tei_processor.py`)  
-- Extracts sections, figures, tables, and graphics from TEI XML
-- Combines multi-segment coordinates for accurate cropping
-- Saves sections as markdown and visual elements as cropped images
-- Comprehensive test coverage (96%)
+### Core Components (in `interactive_paper_reading` package)
+1. **`GrobidProcessor`** - PDF to TEI XML conversion
+2. **`TEIProcessor`** - Extract sections, figures, graphics from TEI
+3. **`PaperAnalyzer`** - LLM-based paper analysis
+4. **`PaperProcessingPipeline`** - Comprehensive end-to-end pipeline
+5. **`AcademicPaperProcessor`** - Simplified pipeline wrapper
 
-### 3. LLM Paper Analysis (`paper_analyzer.py`)
-- Analyzes papers using LLM (OpenAI API compatible)
-- Identifies top 3 relevant papers from references
-- Provides heritage analysis, key contributions, and research gaps
-- Robust JSON parsing with fallback handling
-- Enhanced error handling and logging
+## 🧰 CLI Scripts
 
-### 4. Comprehensive Pipeline (`comprehensive_pipeline.py`)
-- End-to-end workflow combining all components
-- Batch processing support with parallel execution
-- Configurable extraction options (figures, graphics, analysis)
-- Detailed logging and error reporting
+### 1. Comprehensive Pipeline (`comprehensive_pipeline.py`)
+Complete end-to-end processing with batch support
+```bash
+python comprehensive_pipeline.py paper.pdf --output ./output --analyze
+```
 
-### 5. Legacy Scripts
-- **`process_academic_paper.py`** - Original complete pipeline
-- **`process_paper.py`** - Basic PDF to TEI conversion
-- **`process_tei_output.py`** - Basic TEI content extraction
+### 2. Academic Paper Processor (`process_academic_paper.py`)  
+Simplified pipeline for basic processing
+```bash
+python process_academic_paper.py paper.pdf --output-dir ./output
+```
+
+### 3. GROBID Processor (`grobid_processor.py`)
+PDF to TEI conversion only
+```bash
+python grobid_processor.py paper.pdf --output output.tei.xml
+```
+
+### 4. TEI Processor (`tei_processor.py`)
+Extract content from existing TEI files
+```bash
+python tei_processor.py paper.tei.xml --all --pdf paper.pdf --output-dir ./output
+```
+
+### 5. Paper Analyzer (`paper_analyzer.py`)
+LLM-based analysis of processed papers
+```bash
+python paper_analyzer.py sections.md --tei paper.tei.xml --output analysis.json
+```
+
+### 6. Example Scripts
+- **`process_paper.py`** - Simple GROBID processing example
+- **`process_tei_output.py`** - TEI extraction example
 
 ## 🚀 Usage Examples
 

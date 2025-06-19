@@ -8,10 +8,13 @@ This module provides functionality to:
 4. Crop figures/tables from PDF using coordinates
 """
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Tuple
 import xml.etree.ElementTree as ET
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass

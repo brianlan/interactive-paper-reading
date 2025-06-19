@@ -9,7 +9,7 @@ from pathlib import Path
 from unittest.mock import patch, mock_open, MagicMock
 import xml.etree.ElementTree as ET
 
-from scripts.tei_processor import TEIProcessor, Section, FigureTable, Graphic
+from interactive_paper_reading.tei import TEIProcessor, Section, FigureTable, Graphic
 
 
 class TestTEIProcessor:
