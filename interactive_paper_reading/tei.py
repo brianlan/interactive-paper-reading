@@ -253,14 +253,20 @@ class TEIProcessor:
         section_number = head.get('n', '')
         section_title = self._get_element_text(head).replace(section_number, '').strip()
         
-        # Extract all paragraph content
-        paragraphs = div_element.findall('.//tei:p', self.namespaces)
+        # Extract content from all relevant child elements (paragraphs, formulas, etc.)
         content_parts = []
         
-        for p in paragraphs:
-            paragraph_text = self._get_element_text(p)
-            if paragraph_text.strip():
-                content_parts.append(paragraph_text.strip())
+        # Process all direct children that can contain content
+        for child in div_element:
+            # Skip the head element as it's already processed
+            if child.tag.endswith('}head'):
+                continue
+                
+            # Extract text from paragraphs and formulas
+            if child.tag.endswith('}p') or child.tag.endswith('}formula'):
+                child_text = self._get_element_text(child)
+                if child_text.strip():
+                    content_parts.append(child_text.strip())
         
         content = '\n\n'.join(content_parts)
         
