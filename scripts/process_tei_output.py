@@ -9,9 +9,11 @@ This script demonstrates how to use the TEIProcessor to:
 
 from pathlib import Path
 import sys
-sys.path.append(str(Path(__file__).parent))
 
-from tei_processor import TEIProcessor
+# Add parent directory to Python path for package imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from interactive_paper_reading.tei import TEIProcessor
 
 
 def main():

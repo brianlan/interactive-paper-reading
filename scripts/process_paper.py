@@ -8,9 +8,11 @@ to process academic papers with TEI output and coordinates.
 
 from pathlib import Path
 import sys
-sys.path.append(str(Path(__file__).parent))
 
-from grobid_processor import GrobidProcessor
+# Add parent directory to Python path for package imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from interactive_paper_reading.grobid import GrobidProcessor
 
 
 def main():
@@ -42,7 +44,7 @@ def main():
         # - Add coordinates
         result_dir = processor.process_pdf(
             pdf_path=pdf_path,
-            output_dir=output_dir,
+            output_path=output_dir,
             add_coordinates=True,  # Your requirement: "add coordinates"
             consolidate_header=True,  # Enhanced metadata
             consolidate_citations=True,  # Enhanced references
