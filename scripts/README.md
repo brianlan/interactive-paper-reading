@@ -1,180 +1,212 @@
-# Academic Paper Processing Pipeline
+# Academic Paper Processing Scripts
 
-This directory contains a complete workflow for processing academic paper PDFs using GROBID and extracting structured content (sections, figures, tables, graphics) from TEI XML.
+This directory contains scripts for processing academic papers with GROBID, extracting structured content, and analyzing papers with LLM.
 
-## Features
+## 🧰 Core Components
 
-- **Complete Pipeline**: PDF → TEI XML → Structured Content
-- **Section Extraction**: Export document sections as markdown
-- **Figure/Table Extraction**: Crop and save figures/tables as images
-- **Graphics Extraction**: Precise extraction of graphic elements within figures
-- **Multi-segment Coordinate Support**: Handles complex coordinate parsing
-- **Concurrent Processing**: Multiple PDFs processed in parallel
+### 1. GROBID Processing (`grobid_processor.py`)
+- Converts PDF papers to structured TEI XML using GROBID service
+- Handles batch processing and error recovery
+- Configurable timeout and retry logic
 
-## Quick Start
+### 2. TEI Content Extraction (`tei_processor.py`)  
+- Extracts sections, figures, tables, and graphics from TEI XML
+- Combines multi-segment coordinates for accurate cropping
+- Saves sections as markdown and visual elements as cropped images
+- Comprehensive test coverage (96%)
 
-### 1. Install Dependencies
+### 3. LLM Paper Analysis (`paper_analyzer.py`)
+- Analyzes papers using LLM (OpenAI API compatible)
+- Identifies top 3 relevant papers from references
+- Provides heritage analysis, key contributions, and research gaps
+- Robust JSON parsing with fallback handling
+- Enhanced error handling and logging
 
+### 4. Comprehensive Pipeline (`comprehensive_pipeline.py`)
+- End-to-end workflow combining all components
+- Batch processing support with parallel execution
+- Configurable extraction options (figures, graphics, analysis)
+- Detailed logging and error reporting
+
+### 5. Legacy Scripts
+- **`process_academic_paper.py`** - Original complete pipeline
+- **`process_paper.py`** - Basic PDF to TEI conversion
+- **`process_tei_output.py`** - Basic TEI content extraction
+
+## 🚀 Usage Examples
+
+### Quick Start
 ```bash
-pip install -r requirements.txt
+# Process a single paper with full analysis
+python comprehensive_pipeline.py paper.pdf --output ./output --analyze
+
+# Batch process multiple papers
+python comprehensive_pipeline.py ./papers/*.pdf --output ./batch_output --batch
+
+# Extract only sections (skip figures/graphics)
+python comprehensive_pipeline.py paper.pdf --output ./output --no-figures --no-graphics
 ```
 
-### 2. Start GROBID Server
+### Individual Components
 
-You need a running GROBID server. The easiest way is with Docker:
-
+#### GROBID Processing
 ```bash
-# Start GROBID server (this may take a few minutes on first run)
-docker run --rm -it -p 8070:8070 lfoppiano/grobid:0.8.0
+python grobid_processor.py input.pdf output.tei.xml --url http://localhost:8070
 ```
 
-Keep this terminal running. The server will be available at `http://localhost:8070`.
-
-### 3. Process Academic Papers
-
-**Complete Pipeline (Recommended):**
+#### TEI Content Extraction
 ```bash
-# Process PDF to TEI, then extract all content
-python scripts/process_academic_paper.py path/to/your/paper.pdf
-
-# Custom output directory
-python scripts/process_academic_paper.py paper.pdf --output-dir custom/output
+python tei_processor.py input.tei.xml --output-dir ./output --pdf input.pdf
 ```
 
-**Individual Steps:**
+#### Paper Analysis
 ```bash
-# Step 1: PDF → TEI XML only
-python scripts/grobid_processor.py path/to/your/paper.pdf
-
-# Step 2: TEI → Content extraction only
-python scripts/process_academic_paper.py --tei-only existing.tei.xml --pdf paper.pdf
+python paper_analyzer.py sections.md --tei paper.tei.xml --output analysis.json
 ```
 
-## Usage Examples
+## 📋 Prerequisites
 
-### Complete Pipeline Examples
+### Required Dependencies
 ```bash
-# Basic processing: PDF → TEI → Markdown + Images
-python scripts/process_academic_paper.py papers/bev/paper.pdf
-
-# Custom GROBID server and output directory
-python scripts/process_academic_paper.py paper.pdf \
-  --grobid-server http://10.243.123.49:8070 \
-  --output-dir processed_papers/
-
-# Process existing TEI file only
-python scripts/process_academic_paper.py --tei-only existing.tei.xml
-
-# Process TEI with specific PDF for image cropping
-python scripts/process_academic_paper.py --tei-only paper.tei.xml --pdf original.pdf
+pip install requests lxml PyMuPDF pathlib
 ```
 
-### Advanced GROBID Processing
+### GROBID Service
+Start GROBID service locally:
 ```bash
-# Direct GROBID processing with custom options
-python scripts/grobid_processor.py papers/bev/paper.pdf \
-  --consolidate-header \
-  --consolidate-citations \
-  --segment-sentences \
-  -n 5
-
-# Batch processing of multiple PDFs
-python scripts/grobid_processor.py papers/ -o tei_output/
+docker run -t --rm -p 8070:8070 lfoppiano/grobid:0.8.0
 ```
 
-## Output
-
-### Complete Pipeline Output
-The complete pipeline generates:
-- **TEI XML**: Structured document in TEI format (`.grobid.tei.xml`)
-- **Markdown**: Document sections as markdown (`.md`)
-- **Figures**: Cropped figure/table images (`.png`)
-- **Graphics**: Precise graphic element images (`.png`)
-
-Example output structure:
-```
-processed_output/
-├── paper.grobid.tei.xml          # TEI XML from GROBID
-├── paper_sections.md             # Extracted sections
-├── figures/                      # Cropped figures and tables
-│   ├── figure_1_network_arch.png
-│   ├── table_1_results.png
-│   └── ...
-└── graphics/                     # Precise graphic elements
-    ├── graphic_1_diagram.png
-    ├── graphic_2_flowchart.png
-    └── ...
-```
-
-### TEI XML Content
-TEI files contain:
-- Document structure (title, abstract, sections, etc.)
-- Bibliographical references
-- Figures and tables metadata
-- PDF coordinates for all elements
-- Graphics and visual element locations
-
-## Scripts Overview
-
-- **`process_academic_paper.py`** - 🚀 **Main script**: Complete pipeline from PDF to structured content
-- **`grobid_processor.py`** - GROBID integration for PDF → TEI XML conversion
-- **`tei_processor.py`** - TEI XML parsing and content extraction library
-- **`process_paper.py`** - Example script for PDF → TEI processing
-- **`process_tei_output.py`** - Example script for TEI → content extraction
-
-## Configuration Options
-
-### GROBID Processing Options
-- `--server`: GROBID server URL (default: `http://localhost:8070`)
-- `--workers`: Number of concurrent workers (default: 10)
-- `--no-coordinates`: Disable PDF coordinate extraction
-- `--consolidate-header`: Enhance header metadata with external sources
-- `--consolidate-citations`: Enhance bibliographical references
-- `--generate-ids`: Add XML IDs to elements
-- `--segment-sentences`: Add sentence boundaries
-
-### Pipeline Options
-- `--output-dir`: Custom output directory
-- `--tei-only`: Process existing TEI file only (skip GROBID)
-- `--pdf`: Specify PDF file for image cropping (with `--tei-only`)
-- `--grobid-server`: Custom GROBID server URL
-
-## Troubleshooting
-
-### GROBID Server Issues
-- Ensure Docker is running
-- Check if port 8070 is available
-- Wait a few minutes for the server to fully start
-
-### Memory Issues
-- Reduce number of workers with `-n` parameter
-- Process PDFs in smaller batches
-
-### Large Files
-- GROBID works best with academic papers (typically under 50 pages)
-- Very large PDFs may timeout - adjust timeout in config if needed
-
-## Next Steps
-
-After processing, you can:
-1. **Analyze extracted content**: Use the markdown files and cropped images
-2. **Build search indices**: Index the structured document content
-3. **Create visualizations**: Use coordinate data for interactive document viewers
-4. **Develop annotations**: Build annotation tools using document structure
-5. **Compare papers**: Analyze multiple papers using standardized outputs
-
-## Testing
-
-The processing pipeline includes comprehensive unit tests:
-
+### LLM Analysis (Optional)
+Set environment variables for LLM analysis:
 ```bash
-# Run all tests
-pytest tests/
-
-# Run tests with coverage
-pytest --cov=scripts tests/
-
-# View HTML coverage report
-pytest --cov=scripts --cov-report=html tests/
-open htmlcov/index.html
+export OPENAI_ACCESS_TOKEN="your-api-token"
+export OPENAI_ENDPOINT="https://api.openai.com/v1"  # optional
+export OPENAI_MODEL="gpt-4"  # optional
 ```
+
+## 🔧 Configuration Options
+
+### GROBID Processing
+- `--url`: GROBID service URL (default: http://localhost:8070)
+- `--timeout`: Request timeout in seconds
+- `--consolidate-citations`: Enable citation consolidation
+
+### TEI Processing  
+- `--output-dir`: Directory for extracted content
+- `--pdf`: Original PDF file for figure/graphic extraction
+- `--extract-figures`: Extract figures and tables (default: true)
+- `--extract-graphics`: Extract graphics (default: true)
+
+### Paper Analysis
+- `--tei`: TEI XML file for reference extraction
+- `--output`: Save analysis results to JSON file
+- `--endpoint`: Custom LLM API endpoint
+- `--model`: LLM model name
+- `--verbose`: Enable detailed logging
+
+### Comprehensive Pipeline
+- `--analyze`: Enable LLM analysis
+- `--batch`: Batch processing mode
+- `--no-figures`: Skip figure extraction
+- `--no-graphics`: Skip graphics extraction
+- `--quiet`: Suppress non-error output
+
+## 📊 Output Structure
+
+For each processed paper, the pipeline creates:
+```
+output/
+├── paper-name.grobid.tei.xml          # TEI XML from GROBID
+├── paper-name-sections.md             # Extracted sections in markdown
+├── paper-name-figure-1.png           # Cropped figures/tables
+├── paper-name-graphic-1.png          # Cropped graphics  
+└── paper-name-analysis.json          # LLM analysis (if enabled)
+```
+
+## 🧪 Testing
+
+Run the comprehensive test suite:
+```bash
+# All tests with coverage
+python -m pytest tests/ -v --cov=scripts --cov-report=term-missing
+
+# Specific component tests
+python -m pytest tests/test_tei_processor.py -v
+python -m pytest tests/test_paper_analyzer.py -v
+```
+
+Current test coverage:
+- `tei_processor.py`: 96% (31 tests)
+- `paper_analyzer.py`: 71% (22 tests)  
+- Total: 53 tests passing
+
+## 🔍 Advanced Features
+
+### Multi-segment Coordinate Handling
+The TEI processor automatically combines multi-segment coordinates (semicolon-separated) into a single bounding box for accurate figure cropping.
+
+### Robust LLM Response Parsing  
+The paper analyzer handles various LLM response formats:
+- JSON wrapped in markdown code blocks
+- Plain JSON responses
+- Malformed responses with fallback parsing
+
+### Enhanced Error Handling
+- Detailed logging with configurable levels
+- Graceful degradation when components fail
+- Comprehensive error reporting in batch mode
+
+### Reference Extraction
+- Primary: Structured references from TEI XML
+- Fallback: Citation patterns from markdown content
+- Supports multiple reference formats and venues
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **GROBID Connection Error**
+   ```
+   Ensure GROBID service is running on specified port
+   Check firewall/network connectivity
+   ```
+
+2. **Figure Extraction Fails**
+   ```
+   Verify PyMuPDF is installed: pip install PyMuPDF
+   Check PDF file permissions and corruption
+   ```
+
+3. **LLM Analysis Fails**
+   ```
+   Verify API token is set correctly
+   Check API endpoint and model availability
+   Monitor rate limits and quota
+   ```
+
+4. **Out of Memory**
+   ```
+   Process papers individually instead of batch
+   Reduce LLM max_tokens parameter
+   Use lower resolution for figure extraction
+   ```
+
+## 📈 Performance Tips
+
+- Use batch processing for multiple papers
+- Enable parallel processing with `--batch` flag
+- Skip unnecessary extractions with `--no-figures` or `--no-graphics`
+- Use local GROBID instance for better performance
+- Cache TEI files to avoid reprocessing
+
+## 🔄 Pipeline Integration
+
+The scripts are designed to work together in a modular pipeline:
+
+1. **PDF → TEI**: `grobid_processor.py`
+2. **TEI → Content**: `tei_processor.py` 
+3. **Content → Analysis**: `paper_analyzer.py`
+4. **All-in-One**: `comprehensive_pipeline.py`
+
+Each component can be used independently or as part of the complete workflow.
