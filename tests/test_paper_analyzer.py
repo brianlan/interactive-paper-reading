@@ -10,7 +10,7 @@ from unittest.mock import patch, mock_open, MagicMock
 import xml.etree.ElementTree as ET
 import requests
 
-from scripts.paper_analyzer import PaperAnalyzer, Reference, PaperAnalysis
+from interactive_paper_reading.analyzer import PaperAnalyzer, Reference, PaperAnalysis
 
 
 class TestPaperAnalyzer:
@@ -253,7 +253,7 @@ The work by Smith et al. [2] demonstrates the effectiveness of this approach.
         assert "Paper content here" in prompt
         assert "No structured references were available" in prompt
 
-    @patch('scripts.paper_analyzer.PaperAnalyzer.call_llm')
+    @patch('interactive_paper_reading.analyzer.PaperAnalyzer.call_llm')
     def test_analyze_paper_success(self, mock_call_llm, analyzer, sample_markdown, mock_llm_response):
         """Test successful paper analysis."""
         mock_call_llm.return_value = mock_llm_response
@@ -267,7 +267,7 @@ The work by Smith et al. [2] demonstrates the effectiveness of this approach.
         assert len(analysis.relevant_papers) >= 1
         assert analysis.heritage_analysis != ""
 
-    @patch('scripts.paper_analyzer.PaperAnalyzer.call_llm')
+    @patch('interactive_paper_reading.analyzer.PaperAnalyzer.call_llm')
     def test_analyze_paper_with_tei(self, mock_call_llm, analyzer, sample_markdown, sample_tei_xml, mock_llm_response):
         """Test paper analysis with TEI file."""
         mock_call_llm.return_value = mock_llm_response
@@ -290,7 +290,7 @@ The work by Smith et al. [2] demonstrates the effectiveness of this approach.
             with pytest.raises(FileNotFoundError, match="Markdown file not found"):
                 analyzer.analyze_paper(Path('nonexistent.md'))
 
-    @patch('scripts.paper_analyzer.PaperAnalyzer.call_llm')
+    @patch('interactive_paper_reading.analyzer.PaperAnalyzer.call_llm')
     def test_analyze_paper_invalid_json_response(self, mock_call_llm, analyzer, sample_markdown):
         """Test paper analysis with invalid JSON response from LLM."""
         mock_call_llm.return_value = "Invalid JSON response"
