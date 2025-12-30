@@ -195,6 +195,7 @@ cython_debug/
 
 # Papers directory - contains processed PDFs and outputs
 papers/
+topics/
 
 # macOS system files
 .DS_Store
