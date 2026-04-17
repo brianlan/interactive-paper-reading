@@ -244,35 +244,57 @@ class TEIProcessor:
 
     def _extract_section_from_div(self, div_element: ET.Element) -> Optional[Section]:
         """Extract section information from a div element."""
+        import re
+
         # Find the head element for section title and number
         head = div_element.find('./tei:head', self.namespaces)
         if head is None:
             return None
-        
-        # Extract section number and title
+
+        # Get the full head text
+        head_text = self._get_element_text(head)
+
+        # Try to extract section number from 'n' attribute first
         section_number = head.get('n', '')
-        section_title = self._get_element_text(head).replace(section_number, '').strip()
-        
+
+        # If no 'n' attribute, try to parse number from the head text itself
+        # GROBID often embeds section numbers in head text like "I. INTRODUCTION"
+        if not section_number:
+            # Match patterns: Roman numerals (I., II., III.), letters (A., B.),
+            # or numeric (1., 2.1, 2.1.3)
+            # Pattern is strict: number must be followed by space and title text
+            match = re.match(r'^([IVX]+\.|[A-Z]\.|\d+(?:\.\d+)*)\s+(.+)$', head_text)
+            if match:
+                section_number = match.group(1)
+                section_title = match.group(2).strip()
+            else:
+                # No recognizable section number pattern found
+                return None
+        else:
+            # Use 'n' attribute value, extract title by removing number from text
+            section_title = head_text.replace(section_number, '').strip()
+
         # Extract content from all relevant child elements (paragraphs, formulas, etc.)
         content_parts = []
-        
+
         # Process all direct children that can contain content
         for child in div_element:
             # Skip the head element as it's already processed
             if child.tag.endswith('}head'):
                 continue
-                
+
             # Extract text from paragraphs and formulas
             if child.tag.endswith('}p') or child.tag.endswith('}formula'):
                 child_text = self._get_element_text(child)
                 if child_text.strip():
                     content_parts.append(child_text.strip())
-        
+
         content = '\n\n'.join(content_parts)
-        
+
+        # Return section only if we have both number and title
         if section_number and section_title:
             return Section(section_number, section_title, content)
-        
+
         return None
     
     def _extract_figure_table_from_element(
