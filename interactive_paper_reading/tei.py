@@ -27,10 +27,13 @@ class Section:
     
     def to_markdown(self) -> str:
         """Convert section to markdown format."""
-        level = self.number.count('.') + 2  # Start with ## for top-level sections
-        header_prefix = '#' * level
-        
-        return f"{header_prefix} {self.number} {self.title}\n\n{self.content}\n\n"
+        if self.number:
+            level = self.number.count('.') + 2  # Start with ## for top-level sections
+            header_prefix = '#' * level
+            return f"{header_prefix} {self.number} {self.title}\n\n{self.content}\n\n"
+        else:
+            # No section number — use ## as default level
+            return f"## {self.title}\n\n{self.content}\n\n"
 
 
 @dataclass
@@ -262,14 +265,14 @@ class TEIProcessor:
         if not section_number:
             # Match patterns: Roman numerals (I., II., III.), letters (A., B.),
             # or numeric (1., 2.1, 2.1.3)
-            # Pattern is strict: number must be followed by space and title text
             match = re.match(r'^([IVX]+\.|[A-Z]\.|\d+(?:\.\d+)*)\s+(.+)$', head_text)
             if match:
                 section_number = match.group(1)
                 section_title = match.group(2).strip()
             else:
-                # No recognizable section number pattern found
-                return None
+                # No recognizable section number pattern — use head text as-is
+                section_number = ''
+                section_title = head_text
         else:
             # Use 'n' attribute value, extract title by removing number from text
             section_title = head_text.replace(section_number, '').strip()
@@ -291,8 +294,8 @@ class TEIProcessor:
 
         content = '\n\n'.join(content_parts)
 
-        # Return section only if we have both number and title
-        if section_number and section_title:
+        # Return section if we have a title (number is optional)
+        if section_title:
             return Section(section_number, section_title, content)
 
         return None
